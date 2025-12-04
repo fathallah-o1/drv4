@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io'; // ← لالتقاط أخطاء الشبكة بشكل ودّي
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:geolocator/geolocator.dart';
@@ -82,14 +83,16 @@ class HomeController extends GetxController {
         });
       }
 
-      final d = (r['driver'] ??
-              r['data'] ??
-              r) as Map<String, dynamic>?; // مرونة مع الـ API
+      final d = (r['driver'] ?? r['data'] ?? r) as Map<String, dynamic>?;
       driverName.value = (d?['name'] ?? '').toString();
       driverPhone.value = (d?['phone'] ?? '').toString();
       driverLastSeen.value = (d?['last_seen'] ?? '').toString();
+    } on SocketException {
+      // بصمت
+    } on TimeoutException {
+      // بصمت
     } catch (_) {
-      // بصمت — الواجهة ستعمل حتى بدون البيانات
+      // بصمت
     }
   }
 
@@ -118,8 +121,14 @@ class HomeController extends GetxController {
         'driver_id': '${Env.driverId}',
         'online': isOnline.value ? '1' : '0',
       });
-    } catch (e) {
-      Get.snackbar('تنبيه', 'تعذّر تحديث حالة السائق: $e',
+    } on SocketException {
+      Get.snackbar('الاتصال غير متاح', 'تحقّق من الإنترنت ثم أعد المحاولة.',
+          snackPosition: SnackPosition.BOTTOM);
+    } on TimeoutException {
+      Get.snackbar('انتهت المهلة', 'الخادم لم يستجب. حاول مجددًا بعد قليل.',
+          snackPosition: SnackPosition.BOTTOM);
+    } catch (_) {
+      Get.snackbar('تنبيه', 'تعذّر تحديث حالة السائق حاليًا.',
           snackPosition: SnackPosition.BOTTOM);
     }
   }
@@ -151,6 +160,10 @@ class HomeController extends GetxController {
         'lat': pos.latitude.toStringAsFixed(7),
         'lng': pos.longitude.toStringAsFixed(7),
       });
+    } on TimeoutException {
+      // بصمت
+    } on SocketException {
+      // بصمت
     } catch (_) {
       // بصمت
     }
@@ -167,8 +180,17 @@ class HomeController extends GetxController {
       profitAll.value = double.tryParse('${m['profit_all'] ?? 0}') ?? 0;
       duesToday.value = double.tryParse('${m['dues_today'] ?? 0}') ?? 0;
       debtToday.value = double.tryParse('${m['debt_today'] ?? 0}') ?? 0;
-    } catch (e) {
-      Get.snackbar('خطأ', 'تعذّر تحميل اللوحة: $e',
+    } on SocketException {
+      Get.snackbar('الاتصال غير متاح', 'تعذّر تحميل اللوحة بسبب انقطاع الإنترنت.',
+          snackPosition: SnackPosition.BOTTOM);
+    } on TimeoutException {
+      Get.snackbar('انتهت المهلة', 'الخادم لم يستجب لطلب اللوحة.',
+          snackPosition: SnackPosition.BOTTOM);
+    } on FormatException {
+      Get.snackbar('خلل بالبيانات', 'واجهنا مشكلة أثناء قراءة بيانات اللوحة.',
+          snackPosition: SnackPosition.BOTTOM);
+    } catch (_) {
+      Get.snackbar('خطأ', 'حدث خطأ غير متوقع أثناء تحميل اللوحة.',
           snackPosition: SnackPosition.BOTTOM);
     }
   }
@@ -180,30 +202,46 @@ class HomeController extends GetxController {
       });
       final list = (m['orders'] ?? m['data'] ?? []) as List;
       orders.assignAll(List<Map<String, dynamic>>.from(list));
-    } catch (e) {
-      Get.snackbar('خطأ', 'تعذّر تحميل الطلبات: $e',
+    } on SocketException {
+      Get.snackbar('الاتصال غير متاح', 'لا يمكن تحميل الطلبات بدون إنترنت.',
+          snackPosition: SnackPosition.BOTTOM);
+    } on TimeoutException {
+      Get.snackbar('انتهت المهلة', 'تأخّر الخادم في الاستجابة لطلباتك.',
+          snackPosition: SnackPosition.BOTTOM);
+    } on FormatException {
+      Get.snackbar('خلل بالبيانات', 'واجهنا مشكلة أثناء قراءة قائمة الطلبات.',
+          snackPosition: SnackPosition.BOTTOM);
+    } catch (_) {
+      Get.snackbar('خطأ', 'حدث خطأ غير متوقع أثناء تحميل الطلبات.',
           snackPosition: SnackPosition.BOTTOM);
     }
   }
 
+  // ✅ تعيين الطلب كتم التسليم
   Future<void> markDelivered(int orderId) async {
     if (loading.value) return;
     loading.value = true;
     try {
-      final r = await Api.postJson('order_update_status.php', {
+      final r = await Api.postJson('driver_update_order_status.php', {
         'order_id': '$orderId',
         'driver_id': '${Env.driverId}',
-        'status': 'delivered',
+        'action': 'delivered',
       });
       if (r['status'] == 'ok') {
         Get.snackbar('تم', 'تم تعيين الطلب #$orderId كـ تم التسليم',
             snackPosition: SnackPosition.BOTTOM);
       } else {
-        Get.snackbar('خطأ', 'لم يتم قبول العملية',
+        Get.snackbar('تنبيه', '${r['message'] ?? 'لم يتم قبول العملية'}',
             snackPosition: SnackPosition.BOTTOM);
       }
-    } catch (e) {
-      Get.snackbar('خطأ', 'تعذّر تحديث الطلب: $e',
+    } on SocketException {
+      Get.snackbar('الاتصال غير متاح', 'تعذّر تحديث الطلب بدون إنترنت.',
+          snackPosition: SnackPosition.BOTTOM);
+    } on TimeoutException {
+      Get.snackbar('انتهت المهلة', 'الخادم لم يؤكّد التحديث في الوقت المطلوب.',
+          snackPosition: SnackPosition.BOTTOM);
+    } catch (_) {
+      Get.snackbar('خطأ', 'حدث خطأ أثناء تحديث حالة الطلب.',
           snackPosition: SnackPosition.BOTTOM);
     } finally {
       loading.value = false;
@@ -211,25 +249,32 @@ class HomeController extends GetxController {
     }
   }
 
+  // ✅ تعيين الطلب كتم الرفض
   Future<void> markRejected(int orderId, {String? reason}) async {
     if (loading.value) return;
     loading.value = true;
     try {
-      final r = await Api.postJson('order_update_status.php', {
+      final r = await Api.postJson('driver_update_order_status.php', {
         'order_id': '$orderId',
         'driver_id': '${Env.driverId}',
-        'status': 'rejected',
+        'action': 'rejected',
         if (reason != null && reason.isNotEmpty) 'reason': reason,
       });
       if (r['status'] == 'ok') {
         Get.snackbar('تم', 'تم تعيين الطلب #$orderId كـ تم الرفض',
             snackPosition: SnackPosition.BOTTOM);
       } else {
-        Get.snackbar('خطأ', 'لم يتم قبول العملية',
+        Get.snackbar('تنبيه', '${r['message'] ?? 'لم يتم قبول العملية'}',
             snackPosition: SnackPosition.BOTTOM);
       }
-    } catch (e) {
-      Get.snackbar('خطأ', 'تعذّر تحديث الطلب: $e',
+    } on SocketException {
+      Get.snackbar('الاتصال غير متاح', 'تعذّر تحديث الطلب بدون إنترنت.',
+          snackPosition: SnackPosition.BOTTOM);
+    } on TimeoutException {
+      Get.snackbar('انتهت المهلة', 'الخادم لم يؤكّد التحديث في الوقت المطلوب.',
+          snackPosition: SnackPosition.BOTTOM);
+    } catch (_) {
+      Get.snackbar('خطأ', 'حدث خطأ أثناء تحديث حالة الطلب.',
           snackPosition: SnackPosition.BOTTOM);
     } finally {
       loading.value = false;
@@ -237,25 +282,31 @@ class HomeController extends GetxController {
     }
   }
 
-  Future<void> closeDriverDaily({String period = 'day'}) async {
+  /// إغلاق حساب السائق "لليوم" فقط
+  Future<void> closeDriverDaily() async {
     if (loading.value) return;
     loading.value = true;
     try {
       final r = await Api.postJson('close_driver_daily.php', {
         'driver_id': '${Env.driverId}',
-        'period': period,
+        'period': 'day', // 👈 ثابت: إغلاق يومي فقط
       });
       if (r['status'] == 'ok') {
-        final msg = period == 'week'
-            ? 'تم إغلاق حساب السائق للأسبوع'
-            : 'تم إغلاق حساب السائق لليوم';
-        Get.snackbar('تم', msg, snackPosition: SnackPosition.BOTTOM);
+        Get.snackbar('تم', 'تم إغلاق حساب السائق لليوم',
+            snackPosition: SnackPosition.BOTTOM);
       } else {
         Get.snackbar('تنبيه', '${r['message'] ?? 'لم يتم الإغلاق'}',
             snackPosition: SnackPosition.BOTTOM);
       }
-    } catch (e) {
-      Get.snackbar('خطأ', 'تعذر إغلاق حساب السائق: $e',
+    } on SocketException {
+      Get.snackbar('الاتصال غير متاح', 'لا يمكن تنفيذ الإغلاق بدون إنترنت.',
+          snackPosition: SnackPosition.BOTTOM);
+    } on TimeoutException {
+      Get.snackbar(
+          'انتهت المهلة', 'الخادم لم يُتم عملية الإغلاق في الوقت المحدد.',
+          snackPosition: SnackPosition.BOTTOM);
+    } catch (_) {
+      Get.snackbar('خطأ', 'حدث خطأ أثناء إغلاق حساب السائق.',
           snackPosition: SnackPosition.BOTTOM);
     } finally {
       loading.value = false;
@@ -263,25 +314,31 @@ class HomeController extends GetxController {
     }
   }
 
-  Future<void> closeRestaurantDaily({String period = 'day'}) async {
+  /// إغلاق حساب المطعم "لليوم" فقط
+  Future<void> closeRestaurantDaily() async {
     if (loading.value) return;
     loading.value = true;
     try {
       final r = await Api.postJson('close_restaurant_daily.php', {
         'driver_id': '${Env.driverId}',
-        'period': period,
+        'period': 'day', // 👈 ثابت: إغلاق يومي فقط
       });
       if (r['status'] == 'ok') {
-        final msg = period == 'week'
-            ? 'تم إغلاق حساب المطعم للأسبوع'
-            : 'تم إغلاق حساب المطعم لليوم';
-        Get.snackbar('تم', msg, snackPosition: SnackPosition.BOTTOM);
+        Get.snackbar('تم', 'تم إغلاق حساب المطعم لليوم',
+            snackPosition: SnackPosition.BOTTOM);
       } else {
         Get.snackbar('تنبيه', '${r['message'] ?? 'لم يتم الإغلاق'}',
             snackPosition: SnackPosition.BOTTOM);
       }
-    } catch (e) {
-      Get.snackbar('خطأ', 'تعذر إغلاق حساب المطعم: $e',
+    } on SocketException {
+      Get.snackbar('الاتصال غير متاح', 'لا يمكن تنفيذ الإغلاق بدون إنترنت.',
+          snackPosition: SnackPosition.BOTTOM);
+    } on TimeoutException {
+      Get.snackbar(
+          'انتهت المهلة', 'الخادم لم يُتم عملية الإغلاق في الوقت المحدد.',
+          snackPosition: SnackPosition.BOTTOM);
+    } catch (_) {
+      Get.snackbar('خطأ', 'حدث خطأ أثناء إغلاق حساب المطعم.',
           snackPosition: SnackPosition.BOTTOM);
     } finally {
       loading.value = false;

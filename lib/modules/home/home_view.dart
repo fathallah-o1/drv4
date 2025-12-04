@@ -135,125 +135,131 @@ class HomeView extends StatelessWidget {
     );
   }
 
-Widget _header(HomeController c) {
-  return LayoutBuilder(builder: (ctx, cons) {
-    final compact = cons.maxWidth < 360; // شاشات صغيرة
-    final chipMax = compact ? 120.0 : 150.0;
+  Widget _header(HomeController c) {
+    return LayoutBuilder(builder: (ctx, cons) {
+      final compact = cons.maxWidth < 360; // شاشات صغيرة
+      final chipMax = compact ? 120.0 : 150.0;
 
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Ui.orange,
-        borderRadius: BorderRadius.circular(18),
-      ),
-      child: Row(
-        children: [
-          // بطاقة السائق — نجعلها Flexible مع حد أقصى للعرض
-          Obx(() {
-            final initials = (c.driverName.isNotEmpty)
-                ? c.driverName.value.trim().split(' ')
-                    .map((e) => e.isNotEmpty ? e[0] : '')
-                    .take(2).join()
-                : 'DR';
+      return Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Ui.orange,
+          borderRadius: BorderRadius.circular(18),
+        ),
+        child: Row(
+          children: [
+            // بطاقة السائق — نجعلها Flexible مع حد أقصى للعرض
+            Obx(() {
+              final initials = (c.driverName.isNotEmpty)
+                  ? c.driverName.value.trim().split(' ')
+                      .map((e) => e.isNotEmpty ? e[0] : '')
+                      .take(2).join()
+                  : 'DR';
 
-            return Flexible(
-              flex: 0,
-              child: InkWell(
-                onTap: () => Get.to(() => const DriverProfileView(), arguments: {
-                  'name': c.driverName.value,
-                  'phone': c.driverPhone.value,
-                  'last_seen': c.driverLastSeen.value,
-                }),
-                borderRadius: BorderRadius.circular(12),
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(maxWidth: chipMax),
-                  child: Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: compact ? 8 : 10, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(.18),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        CircleAvatar(
-                          radius: 16,
-                          backgroundColor: Colors.white.withOpacity(.85),
-                          child: Text(initials,
+              return Flexible(
+                flex: 0,
+                child: InkWell(
+                  onTap: () => Get.to(() => const DriverProfileView(), arguments: {
+                    'name': c.driverName.value,
+                    'phone': c.driverPhone.value,
+                    'last_seen': c.driverLastSeen.value,
+                  }),
+                  borderRadius: BorderRadius.circular(12),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(maxWidth: chipMax),
+                    child: Container(
+                      padding: EdgeInsets.symmetric(
+                          horizontal: compact ? 8 : 10, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(.18),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          CircleAvatar(
+                            radius: 16,
+                            backgroundColor: Colors.white.withOpacity(.85),
+                            child: Text(
+                              initials,
                               style: const TextStyle(
-                                  color: Ui.orange, fontWeight: FontWeight.w800)),
-                        ),
-                        const SizedBox(width: 8),
-                        Flexible(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                c.driverName.isEmpty ? 'السائق' : c.driverName.value,
-                                maxLines: 1, overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w800,
-                                  fontSize: compact ? 12 : 13),
+                                color: Ui.orange,
+                                fontWeight: FontWeight.w800,
                               ),
-                              Text(
-                                c.driverPhone.isEmpty ? '' : c.driverPhone.value,
-                                maxLines: 1, overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: compact ? 10 : 11),
-                              ),
-                            ],
+                            ),
                           ),
-                        ),
-                      ],
+                          const SizedBox(width: 8),
+                          Flexible(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  c.driverName.isEmpty ? 'السائق' : c.driverName.value,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: compact ? 12 : 13,
+                                  ),
+                                ),
+                                Text(
+                                  c.driverPhone.isEmpty ? '' : c.driverPhone.value,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: compact ? 10 : 11,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
+              );
+            }),
+
+            const SizedBox(width: 15),
+
+            // مجموعة الحالة/السويتش/الخروج — تنضغط تلقائيًا بفِتِّد بوكس
+            Flexible(
+              flex: 0,
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Obx(
+                  () => Row(
+                    children: [
+                      const Text('متصل', style: TextStyle(color: Colors.white)),
+                      const SizedBox(width: 6),
+                      Transform.scale(
+                        scale: .9,
+                        child: Switch.adaptive(
+                          value: c.isOnline.value,
+                          activeColor: Colors.white,
+                          activeTrackColor: Colors.black26,
+                          onChanged: (v) => c.setOnline(v),
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      IconButton(
+                        tooltip: 'تسجيل خروج',
+                        icon: const Icon(Icons.logout, color: Colors.white),
+                        onPressed: () => c.logout(),
+                      ),
+                    ],
+                  ),
+                ),
               ),
-            );
-          }),
-
-          const SizedBox(width: 15),
-
-          // النص الأوسط يأخذ المساحة المرنة
-   
-
-          // مجموعة الحالة/السويتش/الخروج — تنضغط تلقائيًا بفِتِّد بوكس
-          Flexible(
-            flex: 0,
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Obx(() => Row(
-                children: [
-                  const Text('متصل', style: TextStyle(color: Colors.white)),
-                  const SizedBox(width: 6),
-                  Transform.scale(
-                    scale: .9,
-                    child: Switch.adaptive(
-                      value: c.isOnline.value,
-                      activeColor: Colors.white,
-                      activeTrackColor: Colors.black26,
-                      onChanged: (v) => c.setOnline(v),
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  IconButton(
-                    tooltip: 'تسجيل خروج',
-                    icon: const Icon(Icons.logout, color: Colors.white),
-                    onPressed: () => c.logout(),
-                  ),
-                ],
-              )),
             ),
-          ),
-        ],
-      ),
-    );
-  });
-}
-
+          ],
+        ),
+      );
+    });
+  }
 
   Widget _rangeChips(HomeController c) {
     final items = ['all', 'month', 'week', 'today'];
@@ -390,8 +396,8 @@ Widget _header(HomeController c) {
             onTap: () =>
                 Get.to(() => const HistoryView(kind: HistoryKind.delivered)),
             borderRadius: _r,
-            child:
-                statTile('تم التسليم', '${c.delivered.value}', filled: true, icon: Icons.check_circle),
+            child: statTile('تم التسليم', '${c.delivered.value}',
+                filled: true, icon: Icons.check_circle),
           ),
           InkWell(
             onTap: () =>
@@ -401,22 +407,27 @@ Widget _header(HomeController c) {
                 icon: Icons.cancel_outlined),
           ),
           InkWell(
-            onTap: () => Get.to(() => const HistoryView(kind: HistoryKind.profit)),
+            onTap: () =>
+                Get.to(() => const HistoryView(kind: HistoryKind.profit)),
             borderRadius: _r,
             child: statTile('الربح', c.profitAll.value.toStringAsFixed(2),
                 icon: Icons.payments_outlined),
           ),
           InkWell(
-            onTap: () => Get.to(() => const HistoryView(kind: HistoryKind.dues)),
+            onTap: () =>
+                Get.to(() => const HistoryView(kind: HistoryKind.dues)),
             borderRadius: _r,
-            child: statTile('المستحقات (اليوم)',
+            child: statTile(
+                'المستحقات (اليوم)',
                 c.duesToday.value.toStringAsFixed(2),
                 icon: Icons.account_balance_wallet_outlined),
           ),
           InkWell(
-            onTap: () => Get.to(() => const HistoryView(kind: HistoryKind.debt)),
+            onTap: () =>
+                Get.to(() => const HistoryView(kind: HistoryKind.debt)),
             borderRadius: _r,
-            child: statTile('المديونية (اليوم)',
+            child: statTile(
+                'المديونية (اليوم)',
                 c.debtToday.value.toStringAsFixed(2),
                 icon: Icons.report_gmailerrorred_outlined),
           ),
@@ -439,8 +450,10 @@ Widget _header(HomeController c) {
             elevation: 0,
           ),
           onPressed: onTap,
-          child:
-              Text(text, style: const TextStyle(fontWeight: FontWeight.w700)),
+          child: Text(
+            text,
+            style: const TextStyle(fontWeight: FontWeight.w700),
+          ),
         ),
       );
     }
@@ -449,13 +462,8 @@ Widget _header(HomeController c) {
       spacing: 10,
       runSpacing: 10,
       children: [
-        btn('إغلاق حساب السائق (اليوم)', () => c.closeDriverDaily(period: 'day')),
-        btn('إغلاق حساب السائق (الأسبوع)',
-            () => c.closeDriverDaily(period: 'week')),
-        btn('إغلاق حساب المطعم (اليوم)',
-            () => c.closeRestaurantDaily(period: 'day')),
-        btn('إغلاق حساب المطعم (الأسبوع)',
-            () => c.closeRestaurantDaily(period: 'week')),
+        btn('إغلاق حساب السائق (اليوم)', () => c.closeDriverDaily()),
+        btn('إغلاق حساب المطعم (اليوم)', () => c.closeRestaurantDaily()),
       ],
     );
   }

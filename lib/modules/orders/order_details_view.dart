@@ -61,7 +61,7 @@ class OrderDetailsView extends StatelessWidget {
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () async {
-                      await c.markDelivered(o['id'] as int); // ← هنا توضع
+                      await c.markDelivered(o['id'] as int); // ← تعمل
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green.shade600,
@@ -77,7 +77,7 @@ class OrderDetailsView extends StatelessWidget {
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () async {
-                      await c.markRejected(o['id'] as int, reason: 'رفض الزبون');
+                      await c.markRejected(o['id'] as int, reason: 'رفض الزبون'); // ← تعمل
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.red.shade600,

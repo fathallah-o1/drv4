@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:async';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../core/api.dart';
@@ -33,12 +34,16 @@ class DriverProfileController extends GetxController {
         lastSeen.value = '${d['last_seen'] ?? ''}';
         createdAt.value = '${d['created_at'] ?? ''}';
       } else {
-        Get.snackbar('تنبيه', '${r['message'] ?? 'تعذّر تحميل البيانات'}',
-            snackPosition: SnackPosition.BOTTOM);
+        _toastWarn(_msgOrDefault(r['message'], 'تعذّر تحميل البيانات، حاول لاحقًا.'));
       }
-    } catch (e) {
-      Get.snackbar('خطأ', 'تعذّر الاتصال: $e',
-          snackPosition: SnackPosition.BOTTOM);
+    } on SocketException {
+      _toastError('لا يوجد اتصال بالإنترنت. تأكد من الشبكة ثم أعد المحاولة.');
+    } on TimeoutException {
+      _toastError('الخادم لم يستجب في الوقت المناسب. حاول مجددًا بعد قليل.');
+    } on FormatException {
+      _toastError('حدث خلل أثناء معالجة البيانات. أعد المحاولة لاحقًا.');
+    } catch (_) {
+      _toastError('حدث خطأ غير متوقع أثناء تحميل الملف الشخصي.');
     }
   }
 
@@ -53,12 +58,18 @@ class DriverProfileController extends GetxController {
       });
       if (r['status'] == 'ok') {
         Get.back(); // رجوع اختياري
-        Get.snackbar('تم', 'تم حفظ التغييرات',
-            snackPosition: SnackPosition.BOTTOM);
+        _toastOk('تم حفظ التغييرات بنجاح.');
       } else {
-        Get.snackbar('تنبيه', '${r['message'] ?? 'لم يتم الحفظ'}',
-            snackPosition: SnackPosition.BOTTOM);
+        _toastWarn(_msgOrDefault(r['message'], 'لم يتم حفظ التغييرات. حاول لاحقًا.'));
       }
+    } on SocketException {
+      _toastError('تعذّر الاتصال بالخادم. تحقق من الإنترنت.');
+    } on TimeoutException {
+      _toastError('انتهت مهلة الاتصال. الرجاء المحاولة مرة أخرى.');
+    } on FormatException {
+      _toastError('رد غير متوقع من الخادم. حاول لاحقًا.');
+    } catch (_) {
+      _toastError('حدث خلل غير متوقع أثناء حفظ البيانات.');
     } finally {
       loading.value = false;
     }
@@ -66,8 +77,7 @@ class DriverProfileController extends GetxController {
 
   Future<void> changePassword(String oldPass, String newPass) async {
     if (oldPass.isEmpty || newPass.isEmpty) {
-      Get.snackbar('تنبيه', 'أدخل كلمة المرور القديمة والجديدة',
-          snackPosition: SnackPosition.BOTTOM);
+      _toastWarn('أدخل كلمة المرور القديمة والجديدة.');
       return;
     }
     try {
@@ -77,15 +87,19 @@ class DriverProfileController extends GetxController {
         'new_password': newPass,
       });
       if (r['status'] == 'ok') {
-        Get.snackbar('تم', 'تم تغيير كلمة المرور',
-            snackPosition: SnackPosition.BOTTOM);
+        _toastOk('تم تغيير كلمة المرور بنجاح.');
       } else {
-        Get.snackbar('خطأ', '${r['message'] ?? 'فشل تغيير كلمة المرور'}',
-            snackPosition: SnackPosition.BOTTOM);
+        // نحترم رسالة السيرفر إن وُجدت (مثلاً: القديمة غير صحيحة)
+        _toastWarn(_msgOrDefault(r['message'], 'تعذّر تغيير كلمة المرور.'));
       }
-    } catch (e) {
-      Get.snackbar('خطأ', 'تعذّر الاتصال: $e',
-          snackPosition: SnackPosition.BOTTOM);
+    } on SocketException {
+      _toastError('لا يوجد اتصال بالإنترنت. حاول مرة أخرى.');
+    } on TimeoutException {
+      _toastError('انتهت مهلة الطلب. أعد المحاولة لاحقًا.');
+    } on FormatException {
+      _toastError('حدث خطأ في معالجة الرد. حاول لاحقًا.');
+    } catch (_) {
+      _toastError('حدث خلل غير متوقع أثناء تغيير كلمة المرور.');
     }
   }
 
@@ -102,15 +116,37 @@ class DriverProfileController extends GetxController {
       );
       if (r['status'] == 'ok') {
         avatarUrl.value = '${r['avatar_url']}';
-        Get.snackbar('تم', 'تم تحديث الصورة الشخصية',
-            snackPosition: SnackPosition.BOTTOM);
+        _toastOk('تم تحديث الصورة الشخصية بنجاح.');
       } else {
-        Get.snackbar('تنبيه', '${r['message'] ?? 'فشل رفع الصورة'}',
-            snackPosition: SnackPosition.BOTTOM);
+        _toastWarn(_msgOrDefault(r['message'], 'فشل رفع الصورة. حاول مجددًا.'));
       }
-    } catch (e) {
-      Get.snackbar('خطأ', 'تعذّر رفع الصورة: $e',
-          snackPosition: SnackPosition.BOTTOM);
+    } on SocketException {
+      _toastError('تعذّر رفع الصورة بسبب انقطاع الإنترنت.');
+    } on TimeoutException {
+      _toastError('انتهت مهلة الرفع. الرجاء المحاولة مرة أخرى.');
+    } on FormatException {
+      _toastError('رد غير صالح من الخادم أثناء الرفع.');
+    } catch (_) {
+      _toastError('حدث خلل غير متوقع أثناء رفع الصورة.');
     }
+  }
+
+  // ===== مساعدات رسائل ودّية (بدون تغيير المنطق) =====
+
+  String _msgOrDefault(dynamic m, String fallback) {
+    final s = (m ?? '').toString().trim();
+    return s.isEmpty ? fallback : s;
+  }
+
+  void _toastOk(String message) {
+    Get.snackbar('تم', message, snackPosition: SnackPosition.BOTTOM);
+  }
+
+  void _toastWarn(String message) {
+    Get.snackbar('تنبيه', message, snackPosition: SnackPosition.BOTTOM);
+  }
+
+  void _toastError(String message) {
+    Get.snackbar('خطأ', message, snackPosition: SnackPosition.BOTTOM);
   }
 }

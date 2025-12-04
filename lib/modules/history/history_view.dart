@@ -81,7 +81,6 @@ class HistoryView extends StatelessWidget {
             ),
             const SizedBox(height: 8),
 
-            // للتبويب: الطلبات + سجلات الإغلاق (إن وُجدت)
             if (kind == HistoryKind.dues ||
                 kind == HistoryKind.debt ||
                 kind == HistoryKind.profit)
@@ -90,6 +89,7 @@ class HistoryView extends StatelessWidget {
                   length: 2,
                   child: Column(
                     children: [
+                      _SummaryBar(kind: kind),
                       TabBar(
                         indicator: const UnderlineTabIndicator(
                           borderSide: BorderSide(color: Ui.orange, width: 3),
@@ -116,6 +116,39 @@ class HistoryView extends StatelessWidget {
   }
 }
 
+class _SummaryBar extends GetView<HistoryController> {
+  const _SummaryBar({super.key, required this.kind});
+  final HistoryKind kind;
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final s = controller.summary;
+      if (s.isEmpty) return const SizedBox.shrink();
+      String line = 'عدد الطلبات: ${s['orders_count'] ?? s['count'] ?? '-'}'
+          ' • إجمالي الطلبات: ${s['sum_total'] ?? s['sum_amount'] ?? '-'}'
+          ' • عمولة التوصيل: ${s['sum_delivery'] ?? '-'}'
+          ' • المديونية: ${s['sum_debt'] ?? (s['debt_today'] ?? '-')}'
+          ' • الربح: ${s['sum_profit'] ?? (s['profit_today'] ?? '-')}';
+      if ((s['range'] ?? '') == 'today' && s['today'] is Map) {
+        final t = s['today'] as Map;
+        line += '  —  (اليوم: مستحقّات ${t['dues_today'] ?? '-'} / مديونية ${t['debt_today'] ?? '-'} / ربح ${t['profit_today'] ?? '-'} )';
+      }
+      return Container(
+        width: double.infinity,
+        margin: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: _HCARD,
+          borderRadius: _HR,
+          border: Border.all(color: _HDIVIDER),
+        ),
+        child: Text(line, style: const TextStyle(color: _HTEXT)),
+      );
+    });
+  }
+}
+
 class _OrdersOnly extends GetView<HistoryController> {
   const _OrdersOnly({super.key});
   @override
@@ -124,27 +157,33 @@ class _OrdersOnly extends GetView<HistoryController> {
       if (controller.loading.value) {
         return const Center(child: CircularProgressIndicator());
       }
-      if (controller.orders.isEmpty) {
-        return Center(
-          child: Container(
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              color: _HCARD,
-              borderRadius: _HR,
-              border: Border.all(color: _HDIVIDER),
-            ),
-            child: const Text('لا يوجد بيانات', style: TextStyle(color: _HTEXT_MUTE)),
+      return Column(
+        children: [
+          const _SummaryBar(kind: HistoryKind.delivered),
+          Expanded(
+            child: controller.orders.isEmpty
+                ? Center(
+                    child: Container(
+                      padding: const EdgeInsets.all(18),
+                      decoration: BoxDecoration(
+                        color: _HCARD,
+                        borderRadius: _HR,
+                        border: Border.all(color: _HDIVIDER),
+                      ),
+                      child: const Text('لا يوجد بيانات', style: TextStyle(color: _HTEXT_MUTE)),
+                    ),
+                  )
+                : ListView.separated(
+                    padding: const EdgeInsets.all(12),
+                    itemBuilder: (_, i) {
+                      final o = controller.orders[i];
+                      return _orderTile(o, controller.valueOf(o));
+                    },
+                    separatorBuilder: (_, __) => const SizedBox(height: 8),
+                    itemCount: controller.orders.length,
+                  ),
           ),
-        );
-      }
-      return ListView.separated(
-        padding: const EdgeInsets.all(12),
-        itemBuilder: (_, i) {
-          final o = controller.orders[i];
-          return _orderTile(o, controller.valueOf(o));
-        },
-        separatorBuilder: (_, __) => const SizedBox(height: 8),
-        itemCount: controller.orders.length,
+        ],
       );
     });
   }
@@ -161,27 +200,33 @@ class _HistoryTabs extends GetView<HistoryController> {
           if (controller.loading.value) {
             return const Center(child: CircularProgressIndicator());
           }
-          if (controller.orders.isEmpty) {
-            return Center(
-              child: Container(
-                padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
-                  color: _HCARD,
-                  borderRadius: _HR,
-                  border: Border.all(color: _HDIVIDER),
-                ),
-                child: const Text('لا يوجد بيانات', style: TextStyle(color: _HTEXT_MUTE)),
+          return Column(
+            children: [
+              const _SummaryBar(kind: HistoryKind.dues),
+              Expanded(
+                child: controller.orders.isEmpty
+                    ? Center(
+                        child: Container(
+                          padding: const EdgeInsets.all(18),
+                          decoration: BoxDecoration(
+                            color: _HCARD,
+                            borderRadius: _HR,
+                            border: Border.all(color: _HDIVIDER),
+                          ),
+                          child: const Text('لا يوجد بيانات', style: TextStyle(color: _HTEXT_MUTE)),
+                        ),
+                      )
+                    : ListView.separated(
+                        padding: const EdgeInsets.all(12),
+                        itemBuilder: (_, i) {
+                          final o = controller.orders[i];
+                          return _orderTile(o, controller.valueOf(o));
+                        },
+                        separatorBuilder: (_, __) => const SizedBox(height: 8),
+                        itemCount: controller.orders.length,
+                      ),
               ),
-            );
-          }
-          return ListView.separated(
-            padding: const EdgeInsets.all(12),
-            itemBuilder: (_, i) {
-              final o = controller.orders[i];
-              return _orderTile(o, controller.valueOf(o));
-            },
-            separatorBuilder: (_, __) => const SizedBox(height: 8),
-            itemCount: controller.orders.length,
+            ],
           );
         }),
         // تبويب سجلات الإغلاق
@@ -189,44 +234,49 @@ class _HistoryTabs extends GetView<HistoryController> {
           if (controller.loading.value) {
             return const Center(child: CircularProgressIndicator());
           }
-          if (controller.closures.isEmpty) {
-            return Center(
-              child: Container(
-                padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
-                  color: _HCARD,
-                  borderRadius: _HR,
-                  border: Border.all(color: _HDIVIDER),
-                ),
-                child: const Text('لا يوجد سجلات إغلاق', style: TextStyle(color: _HTEXT_MUTE)),
-              ),
-            );
-          }
-          return ListView.separated(
-            padding: const EdgeInsets.all(12),
-            itemBuilder: (_, i) {
-              final r = controller.closures[i];
-              return Card(
-                color: _HCARD,
-                shape: RoundedRectangleBorder(
-                  borderRadius: _HR,
-                  side: const BorderSide(color: _HDIVIDER),
-                ),
-                child: ListTile(
-                  title: Text(
-                    'تاريخ الإغلاق: ${r['closing_date']}',
-                    style: const TextStyle(color: _HTEXT, fontWeight: FontWeight.w700),
+          return controller.closures.isEmpty
+              ? Center(
+                  child: Container(
+                    padding: const EdgeInsets.all(18),
+                    decoration: BoxDecoration(
+                      color: _HCARD,
+                      borderRadius: _HR,
+                      border: Border.all(color: _HDIVIDER),
+                    ),
+                    child: const Text('لا يوجد سجلات إغلاق', style: TextStyle(color: _HTEXT_MUTE)),
                   ),
-                  subtitle: Text(
-                    'القيمة: ${r['amount']} — الطلبات: ${r['order_ids']}',
-                    style: const TextStyle(color: _HTEXT_MUTE),
-                  ),
-                ),
-              );
-            },
-            separatorBuilder: (_, __) => const SizedBox(height: 8),
-            itemCount: controller.closures.length,
-          );
+                )
+              : ListView.separated(
+                  padding: const EdgeInsets.all(12),
+                  itemBuilder: (_, i) {
+                    final r = controller.closures[i];
+                    final orders = (r['orders'] ?? []) as List;
+                    return Card(
+                      color: _HCARD,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: _HR,
+                        side: const BorderSide(color: _HDIVIDER),
+                      ),
+                      child: ExpansionTile(
+                        tilePadding: const EdgeInsets.symmetric(horizontal: 12),
+                        title: Text(
+                          'تاريخ الإغلاق: ${r['closing_date']} — القيمة: ${r['amount']}',
+                          style: const TextStyle(color: _HTEXT, fontWeight: FontWeight.w700),
+                        ),
+                        subtitle: Text('الطلبات: ${r['order_ids'] ?? ''}',
+                            style: const TextStyle(color: _HTEXT_MUTE)),
+                        children: orders.isEmpty
+                            ? [const ListTile(title: Text('لا توجد تفاصيل طلبات', style: TextStyle(color: _HTEXT_MUTE)))]
+                            : orders.map((o) => ListTile(
+                                  title: Text('#${o['id']} — ${o['username']} (${o['phone']})'),
+                                  subtitle: Text('الإجمالي ${o['total']} — عمولة ${o['delivery_fee']} — مديونية ${o['restaurant_due']}'),
+                                )).toList(),
+                      ),
+                    );
+                  },
+                  separatorBuilder: (_, __) => const SizedBox(height: 8),
+                  itemCount: controller.closures.length,
+                );
         }),
       ],
     );
