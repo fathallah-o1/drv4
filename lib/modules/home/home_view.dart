@@ -12,11 +12,15 @@ import '../driver/driver_profile_view.dart'; // 👈 مضاف
 class HomeView extends StatelessWidget {
   const HomeView({super.key});
 
-  static const _bg = Colors.white;
-  static const _card = Color(0xFFF6F6F8);
+  // ✅ تعديل ألوان فقط (روح الصورة: بيج/بني/كروت ناعمة)
+  static const _bg = Color(0xFFF6F3EF);       // خلفية بيج فاتح
+  static const _card = Color(0xFFFFFFFF);     // كرت أبيض
   static const _text = Color(0xFF1B1B1F);
-  static const _textMute = Color(0xFF6B7280);
-  static const _divider = Color(0xFFE9E9EE);
+  static const _textMute = Color(0xFF8B8B92); // رمادي أنعم
+  static const _divider = Color(0xFFE9E2DC);  // حدود ترابية خفيفة
+
+  // ✅ لون أساسي قريب من الصورة (بديل Ui.orange شكليًا فقط)
+  static const _primary = Color(0xFF6A3F2A);  // بني أنيق
   static final _r = BorderRadius.circular(16);
 
   @override
@@ -42,7 +46,8 @@ class HomeView extends StatelessWidget {
               const SizedBox(height: 18),
               Row(
                 children: const [
-                  Icon(Icons.shopping_bag_outlined, color: Ui.orange, size: 18),
+                  // ✅ لون الأيقونة فقط
+                  Icon(Icons.shopping_bag_outlined, color: _primary, size: 18),
                   SizedBox(width: 6),
                   Text(
                     'الطلبات',
@@ -69,18 +74,28 @@ class HomeView extends StatelessWidget {
                         color: _card,
                         borderRadius: _r,
                         border: Border.all(color: _divider),
+                        // ✅ ظل خفيف يشبه الصورة
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(.04),
+                            blurRadius: 12,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
                       ),
                       child: ListTile(
-                        contentPadding:
-                            const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
                         leading: Container(
                           width: 44,
                           height: 44,
                           decoration: BoxDecoration(
-                            color: Ui.orange.withOpacity(.15),
+                            // ✅ لون أيقونة/خلفية فقط
+                            color: _primary.withOpacity(.12),
                             borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: _divider),
                           ),
-                          child: const Icon(Icons.map, color: Colors.black87),
+                          child: const Icon(Icons.map, color: _primary),
                         ),
                         title: Text(
                           '#${o['id']} — ${o['username']} (${o['phone']})',
@@ -94,21 +109,23 @@ class HomeView extends StatelessWidget {
                         subtitle: const SizedBox(height: 4),
                         trailing: IconButton(
                           icon: const Icon(Icons.directions),
-                          color: Ui.orange,
+                          // ✅ لون الأيقونة فقط
+                          color: _primary,
                           onPressed: () {
                             if (url.isNotEmpty) {
                               launchUrl(Uri.parse(url),
                                   mode: LaunchMode.externalApplication);
-                              Get.snackbar(
-                                'فتح الخريطة',
-                                'تم فتح عنوان التسليم في خرائط جوجل',
-                                snackPosition: SnackPosition.BOTTOM,
+
+                              _snack(
+                                title: 'فتح الخريطة',
+                                message: 'تم فتح عنوان التسليم في خرائط جوجل',
+                                type: _SnackType.ok,
                               );
                             } else {
-                              Get.snackbar(
-                                'تنبيه',
-                                'لا يوجد رابط خريطة صالح',
-                                snackPosition: SnackPosition.BOTTOM,
+                              _snack(
+                                title: 'تنبيه',
+                                message: 'لا يوجد رابط خريطة صالح',
+                                type: _SnackType.warn,
                               );
                             }
                           },
@@ -143,8 +160,16 @@ class HomeView extends StatelessWidget {
       return Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: Ui.orange,
+          // ✅ لون الهيدر فقط
+          color: _primary,
           borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(.06),
+              blurRadius: 14,
+              offset: const Offset(0, 8),
+            ),
+          ],
         ),
         child: Row(
           children: [
@@ -173,17 +198,19 @@ class HomeView extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(.18),
                         borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.white.withOpacity(.20)),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           CircleAvatar(
                             radius: 16,
-                            backgroundColor: Colors.white.withOpacity(.85),
+                            backgroundColor: Colors.white.withOpacity(.90),
                             child: Text(
                               initials,
                               style: const TextStyle(
-                                color: Ui.orange,
+                                // ✅ لون الأحرف فقط
+                                color: _primary,
                                 fontWeight: FontWeight.w800,
                               ),
                             ),
@@ -274,9 +301,17 @@ class HomeView extends StatelessWidget {
       () => Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
         decoration: BoxDecoration(
+          // ✅ نفس روح الكروت
           color: _card,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(color: _divider),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(.03),
+              blurRadius: 10,
+              offset: const Offset(0, 6),
+            ),
+          ],
         ),
         child: SingleChildScrollView(
           scrollDirection: Axis.horizontal,
@@ -291,27 +326,27 @@ class HomeView extends StatelessWidget {
                   onSelected: (_) {
                     c.range.value = r;
                     c.loadDashboard();
-                    Get.snackbar(
-                      'تم',
-                      'تم تغيير المدى إلى: ${labelOf(r)}',
-                      snackPosition: SnackPosition.BOTTOM,
+                    _snack(
+                      title: 'تم',
+                      message: 'تم تغيير المدى إلى: ${labelOf(r)}',
+                      type: _SnackType.ok,
                     );
                   },
                   labelPadding: const EdgeInsets.symmetric(horizontal: 8),
                   backgroundColor: Colors.transparent,
-                  selectedColor: Ui.orange.withOpacity(.18),
+                  // ✅ لون التحديد بني فاتح
+                  selectedColor: _primary.withOpacity(.14),
                   labelStyle: TextStyle(
                     color: selected ? _text : _textMute,
                     fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                   ),
                   shape: StadiumBorder(
                     side: BorderSide(
-                      color: selected ? Ui.orange : _divider,
+                      color: selected ? _primary : _divider,
                     ),
                   ),
                   materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  visualDensity:
-                      const VisualDensity(horizontal: -2, vertical: -2),
+                  visualDensity: const VisualDensity(horizontal: -2, vertical: -2),
                 ),
               );
             }).toList(),
@@ -328,9 +363,17 @@ class HomeView extends StatelessWidget {
         {bool filled = false, IconData? icon}) {
       return Container(
         decoration: BoxDecoration(
-          color: filled ? Ui.orange : _card,
+          // ✅ استبدال filled بلون بني بدل البرتقالي
+          color: filled ? _primary : _card,
           borderRadius: _r,
-          border: filled ? null : Border.all(color: _divider),
+          border: Border.all(color: filled ? Colors.transparent : _divider),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(.03),
+              blurRadius: 10,
+              offset: const Offset(0, 6),
+            ),
+          ],
         ),
         padding: const EdgeInsets.all(14),
         child: Column(
@@ -343,13 +386,14 @@ class HomeView extends StatelessWidget {
                 height: 30,
                 decoration: BoxDecoration(
                   color: filled
-                      ? Colors.white.withOpacity(.2)
-                      : Ui.orange.withOpacity(.15),
+                      ? Colors.white.withOpacity(.20)
+                      : _primary.withOpacity(.12),
                   borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: _divider),
                 ),
                 child: Icon(
                   icon,
-                  color: filled ? Colors.white : Colors.black87,
+                  color: filled ? Colors.white : _primary,
                   size: 18,
                 ),
               ),
@@ -393,29 +437,25 @@ class HomeView extends StatelessWidget {
         crossAxisSpacing: 10,
         children: [
           InkWell(
-            onTap: () =>
-                Get.to(() => const HistoryView(kind: HistoryKind.delivered)),
+            onTap: () => Get.to(() => const HistoryView(kind: HistoryKind.delivered)),
             borderRadius: _r,
             child: statTile('تم التسليم', '${c.delivered.value}',
                 filled: true, icon: Icons.check_circle),
           ),
           InkWell(
-            onTap: () =>
-                Get.to(() => const HistoryView(kind: HistoryKind.rejected)),
+            onTap: () => Get.to(() => const HistoryView(kind: HistoryKind.rejected)),
             borderRadius: _r,
             child: statTile('تم الرفض', '${c.rejected.value}',
                 icon: Icons.cancel_outlined),
           ),
           InkWell(
-            onTap: () =>
-                Get.to(() => const HistoryView(kind: HistoryKind.profit)),
+            onTap: () => Get.to(() => const HistoryView(kind: HistoryKind.profit)),
             borderRadius: _r,
             child: statTile('الربح', c.profitAll.value.toStringAsFixed(2),
                 icon: Icons.payments_outlined),
           ),
           InkWell(
-            onTap: () =>
-                Get.to(() => const HistoryView(kind: HistoryKind.dues)),
+            onTap: () => Get.to(() => const HistoryView(kind: HistoryKind.dues)),
             borderRadius: _r,
             child: statTile(
                 'المستحقات (اليوم)',
@@ -423,8 +463,7 @@ class HomeView extends StatelessWidget {
                 icon: Icons.account_balance_wallet_outlined),
           ),
           InkWell(
-            onTap: () =>
-                Get.to(() => const HistoryView(kind: HistoryKind.debt)),
+            onTap: () => Get.to(() => const HistoryView(kind: HistoryKind.debt)),
             borderRadius: _r,
             child: statTile(
                 'المديونية (اليوم)',
@@ -442,11 +481,11 @@ class HomeView extends StatelessWidget {
         width: double.infinity,
         child: ElevatedButton(
           style: ElevatedButton.styleFrom(
-            backgroundColor: Ui.orange,
+            // ✅ لون زر الإغلاق فقط (لو تبي يظل برتقالي خليه Ui.orange)
+            backgroundColor: _primary,
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(vertical: 14),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
             elevation: 0,
           ),
           onPressed: onTap,
@@ -475,14 +514,88 @@ class HomeView extends StatelessWidget {
         color: _card,
         borderRadius: _r,
         border: Border.all(color: _divider),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(.03),
+            blurRadius: 10,
+            offset: const Offset(0, 6),
+          ),
+        ],
       ),
       child: Row(
         children: [
-          const Icon(Icons.inbox_outlined, color: Ui.orange),
+          const Icon(Icons.inbox_outlined, color: _primary),
           const SizedBox(width: 10),
           Text(msg, style: const TextStyle(color: _textMute)),
         ],
       ),
     );
   }
+
+  // ================== Snackbars: تحسين الشكل فقط ==================
+
+  static void _snack({
+    required String title,
+    required String message,
+    required _SnackType type,
+  }) {
+    IconData icon;
+    Color accent;
+
+    switch (type) {
+      case _SnackType.ok:
+        icon = Icons.check_circle;
+        accent = const Color(0xFF1F8A4C);
+        break;
+      case _SnackType.warn:
+        icon = Icons.warning_amber_rounded;
+        accent = const Color(0xFFB7791F);
+        break;
+      case _SnackType.err:
+        icon = Icons.error;
+        accent = const Color(0xFFC53030);
+        break;
+    }
+
+    Get.rawSnackbar(
+      snackStyle: SnackStyle.FLOATING,
+      backgroundColor: Colors.white,
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      borderRadius: 16,
+      duration: const Duration(seconds: 2),
+      boxShadows: [
+        BoxShadow(
+          color: Colors.black.withOpacity(.12),
+          blurRadius: 18,
+          offset: const Offset(0, 8),
+        ),
+      ],
+      borderColor: const Color(0xFFE9E2DC),
+      borderWidth: 1,
+      messageText: Row(
+        children: [
+          Icon(icon, color: accent),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(title,
+                    style: const TextStyle(
+                        color: _text, fontWeight: FontWeight.w900)),
+                const SizedBox(height: 2),
+                Text(message,
+                    style: const TextStyle(
+                        color: _textMute, fontWeight: FontWeight.w700)),
+              ],
+            ),
+          ),
+        ],
+      ),
+      isDismissible: true,
+    );
+  }
 }
+
+enum _SnackType { ok, warn, err }

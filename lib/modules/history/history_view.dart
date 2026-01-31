@@ -4,12 +4,13 @@ import '../../core/ui.dart';
 import 'history_controller.dart';
 import 'history_types.dart';
 
-/// ثوابت تصميم عامة
-const Color _HBG = Colors.white;
-const Color _HCARD = Color(0xFFF6F6F8);
+/// ✅ ثوابت تصميم عامة (تغيير ألوان فقط)
+const Color _HBG = Color(0xFFF6F3EF);        // بيج فاتح للخلفية
+const Color _HCARD = Color(0xFFFFFFFF);      // كروت بيضاء
 const Color _HTEXT = Color(0xFF1B1B1F);
-const Color _HTEXT_MUTE = Color(0xFF6B7280);
-const Color _HDIVIDER = Color(0xFFE9E9EE);
+const Color _HTEXT_MUTE = Color(0xFF8B8B92); // رمادي أنعم
+const Color _HDIVIDER = Color(0xFFE9E2DC);   // حدود ترابية خفيفة
+const Color _HPRIMARY = Color(0xFF6A3F2A);   // بني أساسي مثل الصورة
 final BorderRadius _HR = BorderRadius.circular(16);
 
 class HistoryView extends StatelessWidget {
@@ -33,10 +34,10 @@ class HistoryView extends StatelessWidget {
         appBar: AppBar(
           backgroundColor: _HBG,
           elevation: 0,
-          iconTheme: const IconThemeData(color: Colors.black),
+          iconTheme: const IconThemeData(color: _HPRIMARY),
           title: Text(
             kind.label,
-            style: const TextStyle(color: Colors.black, fontWeight: FontWeight.w800),
+            style: const TextStyle(color: _HPRIMARY, fontWeight: FontWeight.w900),
           ),
           centerTitle: true,
         ),
@@ -63,13 +64,13 @@ class HistoryView extends StatelessWidget {
                           c.loadAll();
                         },
                         backgroundColor: _HCARD,
-                        selectedColor: Ui.orange.withOpacity(.18),
+                        selectedColor: _HPRIMARY.withOpacity(.14),
                         labelStyle: TextStyle(
                           color: selected ? _HTEXT : _HTEXT_MUTE,
-                          fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                          fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
                         ),
                         shape: StadiumBorder(
-                          side: BorderSide(color: selected ? Ui.orange : _HDIVIDER),
+                          side: BorderSide(color: selected ? _HPRIMARY : _HDIVIDER),
                         ),
                         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         visualDensity: const VisualDensity(horizontal: -2, vertical: -2),
@@ -92,11 +93,11 @@ class HistoryView extends StatelessWidget {
                       _SummaryBar(kind: kind),
                       TabBar(
                         indicator: const UnderlineTabIndicator(
-                          borderSide: BorderSide(color: Ui.orange, width: 3),
+                          borderSide: BorderSide(color: _HPRIMARY, width: 3),
                         ),
                         labelColor: _HTEXT,
                         unselectedLabelColor: _HTEXT_MUTE,
-                        labelStyle: const TextStyle(fontWeight: FontWeight.w800),
+                        labelStyle: const TextStyle(fontWeight: FontWeight.w900),
                         tabs: const [
                           Tab(text: 'الطلبات'),
                           Tab(text: 'سجلات الإغلاق'),
@@ -142,8 +143,15 @@ class _SummaryBar extends GetView<HistoryController> {
           color: _HCARD,
           borderRadius: _HR,
           border: Border.all(color: _HDIVIDER),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(.04),
+              blurRadius: 12,
+              offset: const Offset(0, 6),
+            ),
+          ],
         ),
-        child: Text(line, style: const TextStyle(color: _HTEXT)),
+        child: Text(line, style: const TextStyle(color: _HTEXT, fontWeight: FontWeight.w700)),
       );
     });
   }
@@ -169,8 +177,16 @@ class _OrdersOnly extends GetView<HistoryController> {
                         color: _HCARD,
                         borderRadius: _HR,
                         border: Border.all(color: _HDIVIDER),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(.04),
+                            blurRadius: 12,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
                       ),
-                      child: const Text('لا يوجد بيانات', style: TextStyle(color: _HTEXT_MUTE)),
+                      child: const Text('لا يوجد بيانات',
+                          style: TextStyle(color: _HTEXT_MUTE, fontWeight: FontWeight.w700)),
                     ),
                   )
                 : ListView.separated(
@@ -212,8 +228,16 @@ class _HistoryTabs extends GetView<HistoryController> {
                             color: _HCARD,
                             borderRadius: _HR,
                             border: Border.all(color: _HDIVIDER),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(.04),
+                                blurRadius: 12,
+                                offset: const Offset(0, 6),
+                              ),
+                            ],
                           ),
-                          child: const Text('لا يوجد بيانات', style: TextStyle(color: _HTEXT_MUTE)),
+                          child: const Text('لا يوجد بيانات',
+                              style: TextStyle(color: _HTEXT_MUTE, fontWeight: FontWeight.w700)),
                         ),
                       )
                     : ListView.separated(
@@ -242,8 +266,16 @@ class _HistoryTabs extends GetView<HistoryController> {
                       color: _HCARD,
                       borderRadius: _HR,
                       border: Border.all(color: _HDIVIDER),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(.04),
+                          blurRadius: 12,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
                     ),
-                    child: const Text('لا يوجد سجلات إغلاق', style: TextStyle(color: _HTEXT_MUTE)),
+                    child: const Text('لا يوجد سجلات إغلاق',
+                        style: TextStyle(color: _HTEXT_MUTE, fontWeight: FontWeight.w700)),
                   ),
                 )
               : ListView.separated(
@@ -259,18 +291,35 @@ class _HistoryTabs extends GetView<HistoryController> {
                       ),
                       child: ExpansionTile(
                         tilePadding: const EdgeInsets.symmetric(horizontal: 12),
+                        iconColor: _HPRIMARY,
+                        collapsedIconColor: _HPRIMARY,
                         title: Text(
                           'تاريخ الإغلاق: ${r['closing_date']} — القيمة: ${r['amount']}',
-                          style: const TextStyle(color: _HTEXT, fontWeight: FontWeight.w700),
+                          style: const TextStyle(color: _HTEXT, fontWeight: FontWeight.w800),
                         ),
-                        subtitle: Text('الطلبات: ${r['order_ids'] ?? ''}',
-                            style: const TextStyle(color: _HTEXT_MUTE)),
+                        subtitle: Text(
+                          'الطلبات: ${r['order_ids'] ?? ''}',
+                          style: const TextStyle(color: _HTEXT_MUTE, fontWeight: FontWeight.w600),
+                        ),
                         children: orders.isEmpty
-                            ? [const ListTile(title: Text('لا توجد تفاصيل طلبات', style: TextStyle(color: _HTEXT_MUTE)))]
-                            : orders.map((o) => ListTile(
-                                  title: Text('#${o['id']} — ${o['username']} (${o['phone']})'),
-                                  subtitle: Text('الإجمالي ${o['total']} — عمولة ${o['delivery_fee']} — مديونية ${o['restaurant_due']}'),
-                                )).toList(),
+                            ? [
+                                const ListTile(
+                                  title: Text('لا توجد تفاصيل طلبات',
+                                      style: TextStyle(color: _HTEXT_MUTE)),
+                                )
+                              ]
+                            : orders
+                                .map(
+                                  (o) => ListTile(
+                                    title: Text('#${o['id']} — ${o['username']} (${o['phone']})',
+                                        style: const TextStyle(fontWeight: FontWeight.w700)),
+                                    subtitle: Text(
+                                      'الإجمالي ${o['total']} — عمولة ${o['delivery_fee']} — مديونية ${o['restaurant_due']}',
+                                      style: const TextStyle(color: _HTEXT_MUTE),
+                                    ),
+                                  ),
+                                )
+                                .toList(),
                       ),
                     );
                   },
@@ -300,24 +349,25 @@ Widget _orderTile(Map<String, dynamic> o, String valueText) {
         width: 44,
         height: 44,
         decoration: BoxDecoration(
-          color: Ui.orange.withOpacity(.15),
+          color: _HPRIMARY.withOpacity(.12),
           borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: _HDIVIDER),
         ),
-        child: const Icon(Icons.receipt_long, color: Colors.black87),
+        child: const Icon(Icons.receipt_long, color: _HPRIMARY),
       ),
       title: Text(
         '#${o['id']} — $user ($phone)',
-        style: const TextStyle(color: _HTEXT, fontWeight: FontWeight.w700),
+        style: const TextStyle(color: _HTEXT, fontWeight: FontWeight.w800),
       ),
       subtitle: Text(
         items.isEmpty ? '-' : items,
         maxLines: 2,
         overflow: TextOverflow.ellipsis,
-        style: const TextStyle(color: _HTEXT_MUTE),
+        style: const TextStyle(color: _HTEXT_MUTE, fontWeight: FontWeight.w600),
       ),
       trailing: Text(
         valueText,
-        style: const TextStyle(color: _HTEXT, fontWeight: FontWeight.w800),
+        style: const TextStyle(color: _HTEXT, fontWeight: FontWeight.w900),
       ),
     ),
   );

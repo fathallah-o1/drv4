@@ -19,26 +19,27 @@ import 'modules/driver/driver_profile_view.dart'; // 👈 مضاف
 import 'core/bg_location_service.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  // ✅ اجعل كل شيء داخل نفس الـ Zone لتفادي Zone mismatch
+  runZonedGuarded<Future<void>>(() async {
+    WidgetsFlutterBinding.ensureInitialized();
 
-  // ✅ عـطِّل كل أوضاع الديبج التي ترسم خطوط/حدود/ألوان على الواجهة
-  debugPaintSizeEnabled = false;            // حدود الويدجت البنفسجية
-  debugPaintBaselinesEnabled = false;       // خطوط البيسلاين الحمراء/الزرقاء
-  debugPaintPointersEnabled = false;        // دوائر لمس
-  debugPaintLayerBordersEnabled = false;    // حدود الطبقات
-  debugRepaintRainbowEnabled = false;       // ألوان إعادة الرسم
+    // ✅ عـطِّل كل أوضاع الديبج التي ترسم خطوط/حدود/ألوان على الواجهة
+    debugPaintSizeEnabled = false; // حدود الويدجت البنفسجية
+    debugPaintBaselinesEnabled = false; // خطوط البيسلاين الحمراء/الزرقاء
+    debugPaintPointersEnabled = false; // دوائر لمس
+    debugPaintLayerBordersEnabled = false; // حدود الطبقات
+    debugRepaintRainbowEnabled = false; // ألوان إعادة الرسم
 
-  // لالتقاط أي استثناءات مبكّرة ومنع خروج التطبيق
-  FlutterError.onError = (FlutterErrorDetails details) {
-    FlutterError.dumpErrorToConsole(details);
-  };
+    // لالتقاط أي استثناءات مبكّرة ومنع خروج التطبيق
+    FlutterError.onError = (FlutterErrorDetails details) {
+      FlutterError.dumpErrorToConsole(details);
+    };
 
-  await GetStorage.init();
-  final box = GetStorage();
-  Env.driverId = box.read('driverId') ?? 0;
+    await GetStorage.init();
+    final box = GetStorage();
+    Env.driverId = box.read('driverId') ?? 0;
 
-  // ✳️ لا نشغّل خدمة الخلفية هنا؛ نهيّئها بعد أول فريم فقط
-  runZonedGuarded(() {
+    // ✳️ لا نشغّل خدمة الخلفية هنا؛ نهيّئها بعد أول فريم فقط
     runApp(const DrvApp());
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -74,7 +75,7 @@ class DrvApp extends StatelessWidget {
         GetPage(name: AppRoutes.orderDetails, page: () => const OrderDetailsView()),
         GetPage(name: AppRoutes.closures, page: () => const ClosuresView()),
         GetPage(name: '/history', page: () => const HistoryView()), // احتياط
-         GetPage(name: AppRoutes.driverProfile, page: () => const DriverProfileView()), // 👈 مضاف
+        GetPage(name: AppRoutes.driverProfile, page: () => const DriverProfileView()), // 👈 مضاف
       ],
       theme: ThemeData(primarySwatch: Colors.orange),
     );
